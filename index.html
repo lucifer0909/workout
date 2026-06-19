@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PPL Workout Tracker</title>
+    <style>
+        :root {
+            --bg-dark: #121214;
+            --card-bg: #1e1e24;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --primary: #ef4444; 
+            --pull-blue: #3b82f6;
+            --legs-green: #10b981;
+            --border: #2d2d34;
+            --muscle-base: #3f3f46;
+            --muscle-primary: #ef4444;
+            --muscle-secondary: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-dark); color: var(--text-main); padding-bottom: 60px; }
+
+        header { background-color: var(--card-bg); padding: 16px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); text-align: center; }
+        h1 { font-size: 1.25rem; font-weight: 700; }
+
+        .day-nav { display: flex; overflow-x: auto; background-color: #17171c; padding: 8px; gap: 6px; scroll-behavior: smooth; }
+        .day-nav::-webkit-scrollbar { display: none; }
+        .day-btn { background-color: var(--card-bg); color: var(--text-muted); border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; white-space: nowrap; cursor: pointer; transition: all 0.2s ease; }
+        .day-btn.active[data-type="push"] { background-color: var(--primary); color: white; border-color: var(--primary); }
+        .day-btn.active[data-type="pull"] { background-color: var(--pull-blue); color: white; border-color: var(--pull-blue); }
+        .day-btn.active[data-type="legs"] { background-color: var(--legs-green); color: white; border-color: var(--legs-green); }
+
+        .container { padding: 16px; max-width: 500px; margin: 0 auto; }
+        .day-title-banner { font-size: 1.2rem; font-weight: 700; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+
+        .exercise-card { background-color: #1a1a20; margin-bottom: 24px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        
+        .image-gallery { display: flex; padding: 12px; gap: 10px; background: #fff; }
+        .image-card { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px; height: 160px; background: #f9fafb; }
+        .body-svg { height: 100%; width: auto; }
+        .image-source-tag { position: absolute; bottom: 4px; left: 4px; background: rgba(0,0,0,0.6); color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+
+        .exercise-info { padding: 12px; border-bottom: 1px solid var(--border); }
+        .exercise-name { font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
+        .exercise-desc { font-size: 0.85rem; color: #a1a1aa; line-height: 1.4; }
+
+        .sets-container { padding: 12px; }
+        .sets-grid { display: grid; grid-template-columns: 40px 1fr 1fr 70px; gap: 8px; align-items: center; margin-bottom: 8px; }
+        .grid-header { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; text-align: center; }
+        .set-num { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); text-align: center; }
+
+        input { background-color: #121214; border: 1px solid #3f3f46; color: white; padding: 8px; border-radius: 6px; text-align: center; font-size: 0.95rem; width: 100%; font-weight: 600; }
+        input:focus { outline: none; border-color: #a1a1aa; }
+        
+        .log-btn { background-color: #27272a; color: #fff; border: 1px solid #3f3f46; padding: 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
+        .log-btn.logged { background-color: var(--primary); border-color: var(--primary); }
+        .pull-theme .log-btn.logged { background-color: var(--pull-blue); border-color: var(--pull-blue); }
+        .legs-theme .log-btn.logged { background-color: var(--legs-green); border-color: var(--legs-green); }
+
+        .danger-btn { display: block; width: 100%; background: none; border: 1px solid #ef4444; border-radius: 8px; color: #ef4444; padding: 12px; margin-top: 24px; text-align: center; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>⚡ PPL WORKOUT TRACKER</h1>
+    </header>
+
+    <nav class="day-nav" id="dayNav">
+        <button class="day-btn active" data-day="1" data-type="push">Day 1: Push</button>
+        <button class="day-btn" data-day="2" data-type="pull">Day 2: Pull</button>
+        <button class="day-btn" data-day="3" data-type="legs">Day 3: Legs</button>
+        <button class="day-btn" data-day="4" data-type="push">Day 4: Push</button>
+        <button class="day-btn" data-day="5" data-type="pull">Day 5: Pull</button>
+        <button class="day-btn" data-day="6" data-type="legs">Day 6: Legs</button>
+    </nav>
+
+    <div class="container" id="themeContainer">
+        <div class="day-title-banner" id="dayTitleText">Loading...</div>
+        <div id="workoutContainer"></div>
+        <button class="danger-btn" onclick="clearAllLogs()">Reset All Saved Data</button>
+    </div>
+
+    <script>
+        const program = {
+            1: { title: "Day 1 — Push", type: "push", exercises: [
+                { name: "1. Barbell Bench Press", p: ["chest"], s: ["shoulders", "triceps"], desc: "Lower bar to mid-chest slowly, press upward powerfully. Muscles: Chest, front shoulders, triceps." },
+                { name: "2. Incline Dumbbell Press", p: ["chest"], s: ["shoulders"], desc: "Bench at 30–45°, press dumbbells straight up. Muscles: Upper chest, shoulders." },
+                { name: "3. Cable Chest Fly", p: ["chest"], s: [], desc: "Stand between cables, bring handles together in hugging motion. Muscles: Inner chest." },
+                { name: "4. Dumbbell Shoulder Press", p: ["shoulders"], s: ["triceps"], desc: "Seated, press dumbbells from ear level straight up. Muscles: Shoulders." },
+                { name: "5. Lateral Raises", p: ["shoulders"], s: [], desc: "Raise dumbbells out to sides to shoulder height. Muscles: Side deltoids." },
+                { name: "6. Triceps Rope Pushdown", p: ["triceps"], s: [], desc: "Push rope down until arms are straight. Muscles: Triceps." },
+                { name: "7. Overhead Triceps Ext", p: ["triceps"], s: [], desc: "Lower behind head, press back up. Muscles: Long head of triceps." },
+                { name: "8. Cable Crunch", p: ["abs"], s: [], desc: "Kneel, pull rope down crunching abs. Muscles: Upper abs." }
+            ]},
+            2: { title: "Day 2 — Pull", type: "pull", exercises: [
+                { name: "1. Wide Grip Lat Pulldown", p: ["back"], s: ["biceps"], desc: "Pull bar down to upper chest, elbows pointing down. Muscles: Back width (lats)." },
+                { name: "2. Seated Cable Row", p: ["back"], s: ["biceps"], desc: "Pull handle to belly button, squeeze shoulder blades together. Muscles: Mid back." },
+                { name: "3. Single Arm Dumbbell Row", p: ["back"], s: [], desc: "One knee on bench, row dumbbell up to hip. Muscles: Lats, rhomboids." },
+                { name: "4. Face Pull", p: ["shoulders"], s: ["back"], desc: "Pull rope toward face, elbows high and wide. Muscles: Rear deltoids." },
+                { name: "5. Dumbbell Bicep Curl", p: ["biceps"], s: [], desc: "Curl up slowly, squeeze at top. Muscles: Biceps." },
+                { name: "6. Hammer Curl", p: ["biceps"], s: ["forearms"], desc: "Same as bicep curl but palms face each other. Muscles: Biceps + forearms." },
+                { name: "7. Hanging Leg Raises", p: ["abs"], s: [], desc: "Hang from bar, raise legs to 90°. Muscles: Lower abs." }
+            ]},
+            3: { title: "Day 3 — Legs", type: "legs", exercises: [
+                { name: "1. Barbell Squat", p: ["quads", "glutes"], s: ["hamstrings"], desc: "Squat down until thighs are parallel, drive back up. Muscles: Quads, glutes, hamstrings." },
+                { name: "2. Romanian Deadlift", p: ["hamstrings", "glutes"], s: ["back"], desc: "Hinge at hips, lower bar down shins. Muscles: Hamstrings, glutes." },
+                { name: "3. Leg Press", p: ["quads"], s: ["glutes"], desc: "Push platform away with feet shoulder-width. Muscles: Quads, glutes." },
+                { name: "4. Walking Lunges", p: ["quads", "glutes"], s: [], desc: "Step forward, drop back knee to floor. Muscles: Quads, glutes." },
+                { name: "5. Lying Leg Curl", p: ["hamstrings"], s: [], desc: "Curl heels to glutes. Muscles: Hamstrings." },
+                { name: "6. Calf Raises", p: ["calves"], s: [], desc: "Raise onto toes, lower slowly. Muscles: Calves." },
+                { name: "7. Leg Extension", p: ["quads"], s: [], desc: "Sit in machine, extend legs fully. Muscles: Quads isolation." }
+            ]}
